@@ -13,12 +13,13 @@
 static int curr_counter = 0;
 static int prev_counter = 0;
 static int cpu;
-static int tm;
-static int dosyscall; 
+static int do_touch_tm;
+static int do_syscall;
 
 void alarm_signal_handler(int unused_var)
 {
   printf("CPU%d: %d context switches/s\n", cpu, curr_counter - prev_counter);
+  fflush(0);
   prev_counter = curr_counter;
 
   alarm(1);
@@ -31,11 +32,11 @@ void usr1_signal_handler(int unused_var)
 
 void touch(void)
 {
-  if (tm == YES) {
+  if (do_touch_tm == YES) {
     asm volatile ("tabort. 0;");
   } 
 
-  if (dosyscall == YES) {
+  if (do_syscall == YES) {
     getpid();
   }
 }
@@ -70,27 +71,36 @@ int main(int argc, char** argv)
   pthread_t t1;
   cpu_set_t cpuset;
   pthread_attr_t attr;
- 
-  if (argc >= 2) {
-    cpu = atoi(argv[1]);
-  } else {
-    cpu = 0;
-  }
 
-  tm = NO;
-  dosyscall = NO;
-  if (argc >= 3) {
-    if (!strncmp(argv[2], "--touch-tm", 10)) {
-      printf("Touching TM...\n");
-      tm = YES;
-    } 
+  int option;
 
-    if (!strncmp(argv[3], "--do-syscall", 12)) {
-       printf("Doing syscall...\n");
-       dosyscall = YES;
+  cpu = 0;
+  do_touch_tm = NO;
+  do_syscall = NO;
+
+  while ( (option = getopt(argc, argv, "tsc:")) != -1) {
+    switch (option) {
+      case 't':
+        do_touch_tm = YES;
+        break;
+      case 's':
+        do_syscall = YES;
+        break;
+      case 'c':
+        cpu = atoi(optarg);
+        break;
+      default:
+        printf("Usage: %s [-s (do syscall), default: NO] [-t (touch TM), default: NO] [-c CPUID, default: 0]\n", argv[0]); 
+        exit(1);
     }
   }
        
+  if (do_touch_tm)
+    printf(" - Touch TM using 'tabort. 0'\n");
+
+  if(do_syscall)
+    printf(" - Do syscall\n");
+
   CPU_ZERO(&cpuset);
   CPU_SET(cpu, &cpuset);
  
@@ -99,7 +109,6 @@ int main(int argc, char** argv)
  
   signal(SIGUSR1, usr1_signal_handler); 
  
-
   pthread_create(&t0, &attr, &ping__, NULL);
   pthread_create(&t1, &attr, &pong__, NULL);
  
