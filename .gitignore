@@ -1,2 +1,5 @@
 tabort
 *.o
+s*
+*.log
+*.txt
