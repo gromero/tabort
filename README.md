@@ -17,8 +17,8 @@ $ sudo stap-prep
 ```
 git clone https://github.com/gromero/tabort.git && cd tabort
 sudo yum install systemtap -y
-yum install kernel-devel-$(uname -r) -y
-sudo debuginfo-install kernel-$(uname -r) -y
+sudo yum install kernel-devel-$(uname -r) -y
+sudo yum debuginfo-install kernel-$(uname -r) -y
 sudo stap -v ./tm.d
 ```
 
