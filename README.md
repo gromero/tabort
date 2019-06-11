@@ -1,4 +1,6 @@
-== Prepare system ==
+# Prepare system
+
+## On Ubuntu
 
 ```
 $ echo "deb http://ddebs.ubuntu.com $(lsb_release -cs) main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/ddebs.list
@@ -9,7 +11,18 @@ $ sudo apt-get install linux-image-$(uname -r)-dbgsym
 $ sudo apt-get install systemtap
 $ sudo stap-prep
 ```
-== Run probe ==
+
+## On RHEL
+
+```
+git clone https://github.com/gromero/tabort.git && cd tabort
+sudo yum install systemtap -y
+yum install kernel-devel-$(uname -r) -y
+sudo debuginfo-install kernel-$(uname -r) -y
+sudo stap -v ./tm.d
+```
+
+# Run probe
 
 ```
 $ git clone git@github.com:gromero/tabort.git && cd tabort
@@ -54,4 +67,4 @@ tm_unavailable() -> extract_opal_du
  
 ```
 
-If system has not `tabort` before `sc` after `Pass 5:` there will be no output, i.e. no `tm_unavailable()` will be callled on an idle system.
+If system has not `tabort` before `sc` (i.e. it is *NOT* using TM by any means) after `Pass 5:` there will be no output, i.e. no `tm_unavailable()` will be callled on an idle system.
